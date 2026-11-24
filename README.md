@@ -82,6 +82,14 @@ powershell -ExecutionPolicy Bypass -File scripts/run_ui_gpu.ps1 --camera 0 --dev
 
 Enter the requested item in the `Item to find` field and press `Start tracking`. The UI provides the live camera view, target mask/bounding box, target ID, current location, lifecycle state, latency/FPS/GPU metrics, and a top-down map.
 
+To create the self-contained architecture/validation explainer video included in the local `outputs/` folder:
+
+```powershell
+python scripts/create_demo_video.py --output outputs/objecthunter_demo.mp4 --seconds 46
+```
+
+This video is a synthetic visualization of the pipeline and measured core-validation results. It is not a webcam recording and does not claim live-camera accuracy. A live dashboard recording requires a connected camera and a desktop session where the OpenCV window is visible; press `V` in the dashboard to start/stop recording.
+
 ## Validation and limitations
 
 Run the deterministic validation benchmark with:
