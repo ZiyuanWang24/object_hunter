@@ -82,15 +82,34 @@ powershell -ExecutionPolicy Bypass -File scripts/run_ui_gpu.ps1 --camera 0 --dev
 
 Enter the requested item in the `Item to find` field and press `Start tracking`. The UI provides the live camera view, target mask/bounding box, target ID, current location, lifecycle state, latency/FPS/GPU metrics, and a top-down map.
 
-## Evaluation and limitations
+## Validation and limitations
 
-The included tests cover homography, Kalman behavior, association gates, missing embeddings, lifecycle transitions, re-identification, and ambiguity. `evaluate.py` currently writes a reproducible Kalman smoke benchmark. IDF1, ID switches, re-identification rate, localization error, and ablations require annotated replay data and are intentionally reported as unavailable rather than fabricated.
+Run the deterministic validation benchmark with:
 
-The webcam, YOLO weights, and DINOv2 weights were not bundled or claimed as tested in this repository. A stationary camera and planar workspace are assumptions. Camera exposure changes, severe occlusion, identical objects, lens distortion, and crowded scenes need further validation.
+```powershell
+python scripts/evaluate.py --config configs/default.yaml --output outputs/evaluation.json
+python -m pytest tests -q
+```
 
-## Interview summary
+The benchmark uses a fixed random seed (`2026`) and synthetic observations so that the non-neural core can be checked reproducibly. It measures independent homography validation points, Kalman position error and uncertainty growth during an occlusion, identity consistency under detection-order changes, dormant-object re-identification, and tracker-core throughput.
 
-The key engineering trade-off is a robust 2-D metric tabletop memory instead of pretending a monocular webcam provides full 3-D reconstruction. Neural perception is isolated behind detector/embedder interfaces, while geometry, filtering, association, and lifecycle memory are deterministic and testable. The latest-frame buffer bounds latency; Kalman prediction bridges short occlusions; galleries and dormant matching preserve identity after disappearance; and uncertainty is shown explicitly with covariance ellipses.
+Measured locally in the Python 3.12 environment:
+
+| Validation | Quantified result |
+| --- | ---: |
+| Unit tests | 10 passed |
+| Homography independent validation | 3 points; 2.61e-8 m world RMSE |
+| Homography pixel round-trip | 3.60e-13 px maximum error |
+| Kalman position error | 0.00872 m RMSE after 20-frame warm-up |
+| Ten-frame occlusion prediction | 0.00626 m RMSE |
+| Position covariance trace during occlusion | 5.26x growth |
+| Two-object association identity consistency | 100% over 60 frames |
+| Dormant re-identification | 1/1 success; persistent ID preserved |
+| Deterministic tracker core | 2,975.8 updates/s for 300 two-object frames |
+
+These numbers validate geometry, filtering, association, and memory logic only; they are not end-to-end neural-camera performance. YOLO/DINO latency, GPU memory, IDF1, ID switches, real-scene metric localization error, and camera robustness require annotated replay data or a connected camera and are intentionally not fabricated here.
+
+The webcam, YOLO weights, and DINOv2 weights are not bundled. A stationary camera and planar workspace are assumptions. Camera exposure changes, severe occlusion, identical objects, lens distortion, and crowded scenes need further validation.
 
 ## Attribution and licensing
 
