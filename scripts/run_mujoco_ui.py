@@ -43,6 +43,7 @@ class MuJoCoLab:
         self._build_layout()
         self.root.protocol("WM_DELETE_WINDOW", self.close)
         self.root.after(50, self._refresh)
+        self.root.after(250, self.start)
 
     def _build_layout(self) -> None:
         header = tk.Frame(self.root, bg="#111827", padx=18, pady=12)
@@ -107,66 +108,71 @@ class MuJoCoLab:
         self.status_var.set("Tracker reset")
 
     def _worker(self, target: str) -> None:
-        model = mujoco.MjModel.from_xml_string(SCENE_XML)
-        data = mujoco.MjData(model)
-        renderer = mujoco.Renderer(model, 640, 360)
-        target_mocap = mocap_id(model, target)
-        tracker = MultiObjectTracker(confirm_hits=3, dormant_timeout_s=1.0)
-        target_id = None
-        frame_index = 0
-        manual_offset = np.zeros(2, dtype=float)
-        hidden = False
-        last_wall = time.perf_counter()
-        fps = 0.0
-        self._put_status(f"Tracking {target} in MuJoCo")
-        while not self.stop_event.is_set():
-            try:
-                while True:
-                    command = self.commands.get_nowait()
-                    if command == "left": manual_offset[0] = max(-0.35, manual_offset[0] - 0.05)
-                    elif command == "right": manual_offset[0] = min(0.35, manual_offset[0] + 0.05)
-                    elif command == "hide": hidden = True
-                    elif command == "show": hidden = False
-                    elif command == "reset":
-                        tracker.memory.reset(); tracker.filters.clear(); tracker.last_timestamp = None; target_id = None; manual_offset[:] = 0; hidden = False
-            except queue.Empty:
-                pass
+        try:
+            model = mujoco.MjModel.from_xml_string(SCENE_XML)
+            data = mujoco.MjData(model)
+            # MuJoCo's renderer constructor uses (height, width), unlike
+            # OpenCV's common (width, height) convention.
+            renderer = mujoco.Renderer(model, 360, 640)
+            target_mocap = mocap_id(model, target)
+            tracker = MultiObjectTracker(confirm_hits=3, dormant_timeout_s=1.0)
+            target_id = None
+            frame_index = 0
+            manual_offset = np.zeros(2, dtype=float)
+            hidden = False
+            last_wall = time.perf_counter()
+            fps = 0.0
+            self._put_status(f"Tracking {target} in MuJoCo")
+            while not self.stop_event.is_set():
+                try:
+                    while True:
+                        command = self.commands.get_nowait()
+                        if command == "left": manual_offset[0] = max(-0.35, manual_offset[0] - 0.05)
+                        elif command == "right": manual_offset[0] = min(0.35, manual_offset[0] + 0.05)
+                        elif command == "hide": hidden = True
+                        elif command == "show": hidden = False
+                        elif command == "reset":
+                            tracker.memory.reset(); tracker.filters.clear(); tracker.last_timestamp = None; target_id = None; manual_offset[:] = 0; hidden = False
+                except queue.Empty:
+                    pass
 
-            xy, auto_visible, z = state(target, frame_index)
-            xy = xy + manual_offset
-            visible = auto_visible and not hidden
-            data.mocap_pos[target_mocap] = [float(xy[0]), float(xy[1]), z if visible else 0.70]
-            mujoco.mj_forward(model, data)
-            renderer.update_scene(data, camera="rgb_camera")
-            rgb = renderer.render()
-            frame = cv2.cvtColor(rgb, cv2.COLOR_RGB2BGR)
-            detections = []
-            if visible:
-                bbox_contact = color_bbox(rgb, COLORS_RGB[target])
-                if bbox_contact is not None:
-                    bbox, contact = bbox_contact
-                    detections.append(Detection(
-                        timestamp=frame_index / FPS, class_name=target, confidence=0.99,
-                        bbox=tuple(bbox), contact_pixel=tuple(contact),
-                        world_position=xy + WORLD_OFFSET, embedding=np.asarray(EMBEDDINGS[target], dtype=float),
-                    ))
-            start = time.perf_counter()
-            objects = tracker.update(detections, frame_index / FPS)
-            latency_ms = (time.perf_counter() - start) * 1000
-            if target_id is None:
-                candidates = [o for o in objects if o.last_detection is not None and o.last_observed_at == frame_index / FPS]
-                if candidates:
-                    target_id = candidates[-1].object_id
-            target_record = tracker.memory.objects.get(target_id) if target_id is not None else None
-            wall_now = time.perf_counter()
-            instant = 1.0 / max(wall_now - last_wall, 1e-6)
-            fps = instant if fps == 0 else 0.9 * fps + 0.1 * instant
-            last_wall = wall_now
-            cv2.putText(frame, f"MUJOCO CAMERA | target: {target}", (15, 28), cv2.FONT_HERSHEY_SIMPLEX, 0.65, (225, 235, 245), 2, cv2.LINE_AA)
-            cv2.putText(frame, "simulator ground truth -> ObjectHunter tracker", (15, 55), cv2.FONT_HERSHEY_SIMPLEX, 0.48, (175, 195, 215), 1, cv2.LINE_AA)
-            self._put((frame, target_record, tracker, detections, fps, latency_ms))
-            frame_index += 1
-            time.sleep(max(0.0, 1.0 / FPS - (time.perf_counter() - wall_now)))
+                xy, auto_visible, z = state(target, frame_index)
+                xy = xy + manual_offset
+                visible = auto_visible and not hidden
+                data.mocap_pos[target_mocap] = [float(xy[0]), float(xy[1]), z if visible else 0.70]
+                mujoco.mj_forward(model, data)
+                renderer.update_scene(data, camera="rgb_camera")
+                rgb = renderer.render()
+                frame = cv2.cvtColor(rgb, cv2.COLOR_RGB2BGR)
+                detections = []
+                if visible:
+                    bbox_contact = color_bbox(rgb, COLORS_RGB[target])
+                    if bbox_contact is not None:
+                        bbox, contact = bbox_contact
+                        detections.append(Detection(
+                            timestamp=frame_index / FPS, class_name=target, confidence=0.99,
+                            bbox=tuple(bbox), contact_pixel=tuple(contact),
+                            world_position=xy + WORLD_OFFSET, embedding=np.asarray(EMBEDDINGS[target], dtype=float),
+                        ))
+                start = time.perf_counter()
+                objects = tracker.update(detections, frame_index / FPS)
+                latency_ms = (time.perf_counter() - start) * 1000
+                if target_id is None:
+                    candidates = [o for o in objects if o.last_detection is not None and o.last_observed_at == frame_index / FPS]
+                    if candidates:
+                        target_id = candidates[-1].object_id
+                target_record = tracker.memory.objects.get(target_id) if target_id is not None else None
+                wall_now = time.perf_counter()
+                instant = 1.0 / max(wall_now - last_wall, 1e-6)
+                fps = instant if fps == 0 else 0.9 * fps + 0.1 * instant
+                last_wall = wall_now
+                cv2.putText(frame, f"MUJOCO CAMERA | target: {target}", (15, 28), cv2.FONT_HERSHEY_SIMPLEX, 0.65, (225, 235, 245), 2, cv2.LINE_AA)
+                cv2.putText(frame, "simulator ground truth -> ObjectHunter tracker", (15, 55), cv2.FONT_HERSHEY_SIMPLEX, 0.48, (175, 195, 215), 1, cv2.LINE_AA)
+                self._put((frame, target_record, tracker, detections, fps, latency_ms))
+                frame_index += 1
+                time.sleep(max(0.0, 1.0 / FPS - (time.perf_counter() - wall_now)))
+        except Exception as exc:
+            self._put_status(f"MuJoCo worker error: {type(exc).__name__}: {exc}")
 
     def _map_image(self, target) -> np.ndarray:
         size = 390

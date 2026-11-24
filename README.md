@@ -99,7 +99,7 @@ For the interactive platform, launch the live MuJoCo lab:
 powershell -ExecutionPolicy Bypass -File scripts/run_mujoco.ps1 -Mode ui
 ```
 
-Enter `cup`, `bottle`, `book`, or `keys`, then press `Start`. The window contains a live virtual-camera view, the target's metric tabletop location, lifecycle state, trajectory, velocity, and covariance ellipse. Use `Move left`, `Move right`, `Occlude`, and `Reveal` to exercise motion, prediction, and re-identification. `Reset` starts a fresh session and `Stop` pauses processing.
+Enter `cup`, `bottle`, `book`, or `keys`; the default `cup` target starts automatically. Press `Start` to restart after changing the target. The window contains a live virtual-camera view, the target's metric tabletop location, lifecycle state, trajectory, velocity, and covariance ellipse. Use `Move left`, `Move right`, `Occlude`, and `Reveal` to exercise motion, prediction, and re-identification. `Reset` starts a fresh session and `Stop` pauses processing.
 
 The interactive lab uses MuJoCo's rendered scene and simulator geometry as the detection source so the spatial-memory and UI behavior can be tested deterministically without a webcam. The prerecorded replay command above additionally exercises ObjectHunter's video-input path. Neural YOLO/DINO inference remains available through `scripts/run_demo.py` for real camera or video validation.
 
