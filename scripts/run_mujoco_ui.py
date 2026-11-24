@@ -25,7 +25,7 @@ class MuJoCoLab:
     def __init__(self) -> None:
         self.root = tk.Tk()
         self.root.title("ObjectHunter - MuJoCo Virtual Camera Lab")
-        self.root.geometry("1420x850")
+        self.root.geometry("1880x900")
         self.root.configure(bg="#111827")
         self.target_var = tk.StringVar(value="cup")
         self.status_var = tk.StringVar(value="Press Start simulation")
@@ -37,8 +37,10 @@ class MuJoCoLab:
         self.stop_event = threading.Event()
         self.worker: threading.Thread | None = None
         self.video_image = None
+        self.scene_image = None
         self.map_image = None
         self.video_label = None
+        self.scene_label = None
         self.map_label = None
         self._build_layout()
         self.root.protocol("WM_DELETE_WINDOW", self.close)
@@ -63,6 +65,10 @@ class MuJoCoLab:
             ("Move right", lambda: self.commands.put("right"), "#2563eb"),
             ("Occlude", lambda: self.commands.put("hide"), "#b45309"),
             ("Reveal", lambda: self.commands.put("show"), "#0891b2"),
+            ("Orbit 3-D ↺", lambda: self.commands.put("orbit_left"), "#7c3aed"),
+            ("Orbit 3-D ↻", lambda: self.commands.put("orbit_right"), "#7c3aed"),
+            ("Zoom +", lambda: self.commands.put("zoom_in"), "#9333ea"),
+            ("Zoom -", lambda: self.commands.put("zoom_out"), "#9333ea"),
         ]:
             tk.Button(controls, text=label, command=command, bg=color, fg="white", relief="flat", padx=9, pady=5).pack(side="left", padx=3)
         tk.Label(controls, textvariable=self.status_var, fg="#fbbf24", bg="#1f2937", font=("Segoe UI", 10)).pack(side="right")
@@ -74,6 +80,12 @@ class MuJoCoLab:
         tk.Label(left, text="LIVE MUJOCO RGB CAMERA", fg="#d1d5db", bg="#030712", font=("Segoe UI", 10, "bold")).pack(anchor="w")
         self.video_label = tk.Label(left, bg="#030712")
         self.video_label.pack(fill="both", expand=True)
+
+        scene = tk.Frame(body, bg="#030712", padx=6, pady=6)
+        scene.pack(side="left", fill="both", expand=True, padx=(8, 0))
+        tk.Label(scene, text="3-D MUJOCO SCENE VIEW", fg="#d1d5db", bg="#030712", font=("Segoe UI", 10, "bold")).pack(anchor="w")
+        self.scene_label = tk.Label(scene, bg="#030712")
+        self.scene_label.pack(fill="both", expand=True)
 
         right = tk.Frame(body, bg="#1f2937", width=390, padx=14, pady=14)
         right.pack(side="right", fill="y", padx=(14, 0))
@@ -114,6 +126,12 @@ class MuJoCoLab:
             # MuJoCo's renderer constructor uses (height, width), unlike
             # OpenCV's common (width, height) convention.
             renderer = mujoco.Renderer(model, 360, 640)
+            scene_renderer = mujoco.Renderer(model, 360, 640)
+            scene_camera = mujoco.MjvCamera()
+            scene_camera.azimuth = 135.0
+            scene_camera.elevation = -25.0
+            scene_camera.distance = 1.9
+            scene_camera.lookat[:] = [0.0, 0.0, 0.75]
             target_mocap = mocap_id(model, target)
             tracker = MultiObjectTracker(confirm_hits=3, dormant_timeout_s=1.0)
             target_id = None
@@ -131,6 +149,10 @@ class MuJoCoLab:
                         elif command == "right": manual_offset[0] = min(0.35, manual_offset[0] + 0.05)
                         elif command == "hide": hidden = True
                         elif command == "show": hidden = False
+                        elif command == "orbit_left": scene_camera.azimuth -= 15.0
+                        elif command == "orbit_right": scene_camera.azimuth += 15.0
+                        elif command == "zoom_in": scene_camera.distance = max(1.0, scene_camera.distance - 0.15)
+                        elif command == "zoom_out": scene_camera.distance = min(3.5, scene_camera.distance + 0.15)
                         elif command == "reset":
                             tracker.memory.reset(); tracker.filters.clear(); tracker.last_timestamp = None; target_id = None; manual_offset[:] = 0; hidden = False
                 except queue.Empty:
@@ -168,7 +190,11 @@ class MuJoCoLab:
                 last_wall = wall_now
                 cv2.putText(frame, f"MUJOCO CAMERA | target: {target}", (15, 28), cv2.FONT_HERSHEY_SIMPLEX, 0.65, (225, 235, 245), 2, cv2.LINE_AA)
                 cv2.putText(frame, "simulator ground truth -> ObjectHunter tracker", (15, 55), cv2.FONT_HERSHEY_SIMPLEX, 0.48, (175, 195, 215), 1, cv2.LINE_AA)
-                self._put((frame, target_record, tracker, detections, fps, latency_ms))
+                scene_renderer.update_scene(data, camera=scene_camera)
+                scene_frame = cv2.cvtColor(scene_renderer.render(), cv2.COLOR_RGB2BGR)
+                cv2.putText(scene_frame, "OBLIQUE 3-D WORLD VIEW", (15, 28), cv2.FONT_HERSHEY_SIMPLEX, 0.62, (225, 235, 245), 2, cv2.LINE_AA)
+                cv2.putText(scene_frame, "desk height and object geometry", (15, 55), cv2.FONT_HERSHEY_SIMPLEX, 0.48, (175, 195, 215), 1, cv2.LINE_AA)
+                self._put((frame, scene_frame, target_record, tracker, detections, fps, latency_ms))
                 frame_index += 1
                 time.sleep(max(0.0, 1.0 / FPS - (time.perf_counter() - wall_now)))
         except Exception as exc:
@@ -208,7 +234,7 @@ class MuJoCoLab:
 
     def _refresh(self) -> None:
         try:
-            frame, target, tracker, detections, fps, latency = self.latest.get_nowait()
+            frame, scene_frame, target, tracker, detections, fps, latency = self.latest.get_nowait()
             view = frame.copy()
             for d in detections:
                 x1, y1, x2, y2 = map(int, d.bbox)
@@ -216,6 +242,8 @@ class MuJoCoLab:
                 cv2.putText(view, f"TARGET {d.class_name} {d.confidence:.2f}", (x1, max(22, y1 - 8)), cv2.FONT_HERSHEY_SIMPLEX, .55, (255, 255, 255), 2)
             frame_rgb = cv2.cvtColor(cv2.resize(view, (900, 506)), cv2.COLOR_BGR2RGB)
             self.video_image = ImageTk.PhotoImage(Image.fromarray(frame_rgb)); self.video_label.configure(image=self.video_image)
+            scene_rgb = cv2.cvtColor(cv2.resize(scene_frame, (900, 506)), cv2.COLOR_BGR2RGB)
+            self.scene_image = ImageTk.PhotoImage(Image.fromarray(scene_rgb)); self.scene_label.configure(image=self.scene_image)
             map_rgb = cv2.cvtColor(self._map_image(target), cv2.COLOR_BGR2RGB)
             self.map_image = ImageTk.PhotoImage(Image.fromarray(map_rgb)); self.map_label.configure(image=self.map_image)
             if target is None:
