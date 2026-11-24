@@ -93,6 +93,16 @@ powershell -ExecutionPolicy Bypass -File scripts/run_mujoco.ps1 -Mode generate
 powershell -ExecutionPolicy Bypass -File scripts/run_mujoco.ps1 -Mode run -TargetClass cup -Headless
 ```
 
+For the interactive platform, launch the live MuJoCo lab:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File scripts/run_mujoco.ps1 -Mode ui
+```
+
+Enter `cup`, `bottle`, `book`, or `keys`, then press `Start`. The window contains a live virtual-camera view, the target's metric tabletop location, lifecycle state, trajectory, velocity, and covariance ellipse. Use `Move left`, `Move right`, `Occlude`, and `Reveal` to exercise motion, prediction, and re-identification. `Reset` starts a fresh session and `Stop` pauses processing.
+
+The interactive lab uses MuJoCo's rendered scene and simulator geometry as the detection source so the spatial-memory and UI behavior can be tested deterministically without a webcam. The prerecorded replay command above additionally exercises ObjectHunter's video-input path. Neural YOLO/DINO inference remains available through `scripts/run_demo.py` for real camera or video validation.
+
 The run generates `assets/mujoco_scene.mp4`, `assets/mujoco_ground_truth.jsonl`, `assets/mujoco_tabletop.xml`, and `outputs/mujoco_dashboard.mp4`. The validated run processed 480 virtual-camera frames at 30 FPS, preserved persistent ID 1, and recorded one successful re-identification after occlusion. This mode validates spatial memory and tracking; it does not measure YOLO/DINO detection accuracy. To experiment with the neural detector on the rendered video, use `scripts/run_gpu.ps1 --source assets/mujoco_scene.mp4 --device cuda`, but treat that as a separate detector experiment.
 
 To create the self-contained architecture/validation explainer video included in the local `outputs/` folder:
