@@ -12,6 +12,7 @@ dependencies = ["numpy>=1.24", "scipy>=1.10", "PyYAML>=6.0", "opencv-python>=4.8
 [project.optional-dependencies]
 perception = ["torch>=2.2", "torchvision>=0.17", "ultralytics>=8.3", "transformers>=4.40", "Pillow>=10"]
 dev = ["pytest>=8", "matplotlib>=3.7"]
+simulation = ["mujoco>=3.3"]
 
 [tool.pytest.ini_options]
 pythonpath = ["."]

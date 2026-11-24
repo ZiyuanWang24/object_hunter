@@ -5,3 +5,5 @@ opencv-python>=4.8
 pytest>=8.0
 # Optional GPU/perception stack:
 # torch torchvision ultralytics transformers Pillow
+# Optional MuJoCo virtual-camera simulation:
+# mujoco>=3.3
