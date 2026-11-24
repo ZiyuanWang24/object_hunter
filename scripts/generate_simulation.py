@@ -17,41 +17,70 @@ SCENE_XML = r'''
   <option timestep="0.0166667" gravity="0 0 -9.81" integrator="implicitfast"/>
   <visual>
     <global offwidth="960" offheight="540"/>
-    <headlight ambient="0.65 0.65 0.65" diffuse="0.45 0.45 0.45" specular="0.1 0.1 0.1"/>
+    <headlight ambient="0.45 0.45 0.45" diffuse="0.35 0.35 0.35" specular="0.18 0.18 0.18"/>
   </visual>
   <asset>
-    <material name="floor_mat" rgba="0.08 0.10 0.13 1"/>
-    <material name="wood_mat" rgba="0.38 0.20 0.08 1"/>
-    <material name="edge_mat" rgba="0.18 0.09 0.035 1"/>
-    <material name="cup_mat" rgba="0.08 0.36 0.95 1"/>
-    <material name="bottle_mat" rgba="0.08 0.75 0.26 1"/>
-    <material name="book_mat" rgba="0.72 0.12 0.70 1"/>
-    <material name="key_mat" rgba="0.72 0.74 0.78 1"/>
-    <material name="paper_mat" rgba="0.82 0.82 0.72 1"/>
+    <material name="floor_mat" rgba="0.055 0.07 0.09 1" reflectance="0.12"/>
+    <material name="wood_mat" rgba="0.38 0.20 0.08 1" reflectance="0.08" shininess="0.22"/>
+    <material name="edge_mat" rgba="0.16 0.07 0.025 1" reflectance="0.06"/>
+    <material name="wood_highlight" rgba="0.52 0.29 0.11 1" reflectance="0.07"/>
+    <material name="ceramic_mat" rgba="0.08 0.36 0.95 1" reflectance="0.18" shininess="0.55" specular="0.45"/>
+    <material name="ceramic_dark" rgba="0.025 0.08 0.22 1" reflectance="0.12"/>
+    <material name="coffee_mat" rgba="0.055 0.018 0.008 1" reflectance="0.08"/>
+    <material name="bottle_mat" rgba="0.08 0.75 0.26 1" reflectance="0.16" shininess="0.45" specular="0.35"/>
+    <material name="bottle_dark" rgba="0.025 0.22 0.07 1" reflectance="0.12"/>
+    <material name="label_mat" rgba="0.72 0.92 0.72 1" reflectance="0.03"/>
+    <material name="book_mat" rgba="0.72 0.12 0.70 1" reflectance="0.12" shininess="0.30"/>
+    <material name="book_edge" rgba="0.42 0.045 0.38 1" reflectance="0.08"/>
+    <material name="key_mat" rgba="0.72 0.74 0.78 1" reflectance="0.65" shininess="0.75" specular="0.8"/>
+    <material name="key_dark" rgba="0.25 0.27 0.31 1" reflectance="0.35" shininess="0.55"/>
+    <material name="paper_mat" rgba="0.88 0.84 0.70 1" reflectance="0.02"/>
+    <material name="bookmark_mat" rgba="0.86 0.10 0.08 1" reflectance="0.04"/>
   </asset>
   <worldbody>
-    <light pos="0 -1 3" dir="0 0 -1" diffuse="0.8 0.8 0.8"/>
+    <light pos="-1.5 -1.8 3.0" dir="0.3 0.35 -1" diffuse="0.75 0.78 0.85" specular="0.25 0.25 0.25"/>
+    <light pos="1.7 0.8 2.4" dir="-0.45 -0.25 -1" diffuse="0.42 0.34 0.26" specular="0.15 0.12 0.1"/>
     <geom name="floor" type="plane" size="4 4 0.1" material="floor_mat"/>
     <body name="desk" pos="0 0 0.72">
       <geom name="desk_top" type="box" size="0.72 0.50 0.035" material="wood_mat"/>
+      <geom name="desk_inset" type="box" pos="0 0 0.038" size="0.66 0.44 0.004" material="wood_highlight"/>
       <geom name="desk_edge" type="box" pos="0 0 -0.07" size="0.75 0.53 0.035" material="edge_mat"/>
+      <geom name="desk_leg_front_left" type="box" pos="-0.62 -0.40 -0.38" size="0.055 0.055 0.34" material="edge_mat"/>
+      <geom name="desk_leg_front_right" type="box" pos="0.62 -0.40 -0.38" size="0.055 0.055 0.34" material="edge_mat"/>
+      <geom name="desk_leg_back_left" type="box" pos="-0.62 0.40 -0.38" size="0.055 0.055 0.34" material="edge_mat"/>
+      <geom name="desk_leg_back_right" type="box" pos="0.62 0.40 -0.38" size="0.055 0.055 0.34" material="edge_mat"/>
     </body>
     <body name="cup" mocap="true" pos="-0.30 -0.15 0.87">
-      <geom name="cup_body" type="cylinder" size="0.065 0.09" material="cup_mat" contype="0" conaffinity="0"/>
-      <geom name="cup_rim" type="cylinder" pos="0 0 0.09" size="0.068 0.008" material="cup_mat" contype="0" conaffinity="0"/>
+      <geom name="cup_body" type="cylinder" size="0.065 0.09" material="ceramic_mat" contype="0" conaffinity="0"/>
+      <geom name="cup_base" type="cylinder" pos="0 0 -0.087" size="0.057 0.006" material="ceramic_dark" contype="0" conaffinity="0"/>
+      <geom name="cup_rim" type="cylinder" pos="0 0 0.09" size="0.068 0.008" material="ceramic_mat" contype="0" conaffinity="0"/>
+      <geom name="cup_coffee" type="cylinder" pos="0 0 0.088" size="0.052 0.003" material="coffee_mat" contype="0" conaffinity="0"/>
+      <geom name="cup_handle_side" type="capsule" pos="0.098 0 0.018" size="0.010 0.040" material="ceramic_mat" contype="0" conaffinity="0"/>
+      <geom name="cup_handle_top" type="capsule" pos="0.078 0 0.058" quat="0.707 0 0.707 0" size="0.010 0.025" material="ceramic_mat" contype="0" conaffinity="0"/>
+      <geom name="cup_handle_bottom" type="capsule" pos="0.078 0 -0.022" quat="0.707 0 0.707 0" size="0.010 0.025" material="ceramic_mat" contype="0" conaffinity="0"/>
     </body>
     <body name="bottle" mocap="true" pos="0.28 -0.05 0.87">
       <geom name="bottle_body" type="cylinder" size="0.055 0.14" material="bottle_mat" contype="0" conaffinity="0"/>
-      <geom name="bottle_neck" type="cylinder" pos="0 0 0.17" size="0.028 0.045" material="bottle_mat" contype="0" conaffinity="0"/>
+      <geom name="bottle_shoulder" type="ellipsoid" pos="0 0 0.115" size="0.055 0.055 0.045" material="bottle_mat" contype="0" conaffinity="0"/>
+      <geom name="bottle_neck" type="cylinder" pos="0 0 0.19" size="0.028 0.045" material="bottle_mat" contype="0" conaffinity="0"/>
+      <geom name="bottle_cap" type="cylinder" pos="0 0 0.245" size="0.032 0.016" material="bottle_dark" contype="0" conaffinity="0"/>
+      <geom name="bottle_label" type="box" pos="0 -0.056 0.02" size="0.040 0.003 0.045" material="label_mat" contype="0" conaffinity="0"/>
     </body>
     <body name="book" mocap="true" pos="0.30 0.27 0.795">
       <geom name="book_cover" type="box" size="0.16 0.105 0.018" material="book_mat" contype="0" conaffinity="0"/>
-      <geom name="book_page" type="box" pos="0 0 0.021" size="0.145 0.09 0.006" material="paper_mat" contype="0" conaffinity="0"/>
+      <geom name="book_spine" type="box" pos="-0.145 0 0.023" size="0.015 0.098 0.009" material="book_edge" contype="0" conaffinity="0"/>
+      <geom name="book_page_block" type="box" pos="0.006 0 0.023" size="0.137 0.088 0.007" material="paper_mat" contype="0" conaffinity="0"/>
+      <geom name="book_page_top" type="box" pos="0.006 0 0.034" size="0.132 0.083 0.002" material="paper_mat" contype="0" conaffinity="0"/>
+      <geom name="book_bookmark" type="box" pos="0.08 0 0.040" size="0.028 0.006 0.002" material="bookmark_mat" contype="0" conaffinity="0"/>
     </body>
     <body name="keys" mocap="true" pos="-0.28 0.27 0.80">
-      <geom name="key_a" type="cylinder" pos="-0.045 0 0.02" size="0.025 0.006" material="key_mat" contype="0" conaffinity="0"/>
-      <geom name="key_b" type="cylinder" pos="0.0 0.015 0.02" size="0.025 0.006" material="key_mat" contype="0" conaffinity="0"/>
-      <geom name="key_stem" type="box" pos="0.045 0.015 0.02" size="0.065 0.008 0.006" material="key_mat" contype="0" conaffinity="0"/>
+      <geom name="key_ring" type="cylinder" pos="-0.068 0 0.018" size="0.026 0.006" material="key_mat" contype="0" conaffinity="0"/>
+      <geom name="key_ring_inner" type="cylinder" pos="-0.068 0 0.025" size="0.014 0.003" material="key_dark" contype="0" conaffinity="0"/>
+      <geom name="key_a_head" type="sphere" pos="-0.018 0.006 0.018" size="0.020" material="key_mat" contype="0" conaffinity="0"/>
+      <geom name="key_a_stem" type="box" pos="0.038 0.006 0.018" size="0.060 0.008 0.006" material="key_mat" contype="0" conaffinity="0"/>
+      <geom name="key_a_tooth" type="box" pos="0.082 0.006 0.026" size="0.010 0.012 0.004" material="key_mat" contype="0" conaffinity="0"/>
+      <geom name="key_b_head" type="sphere" pos="-0.015 -0.025 0.020" size="0.017" material="key_mat" contype="0" conaffinity="0"/>
+      <geom name="key_b_stem" type="box" pos="0.038 -0.025 0.020" size="0.055 0.007 0.006" material="key_mat" contype="0" conaffinity="0"/>
     </body>
     <camera name="rgb_camera" pos="0 -0.05 2.65" quat="1 0 0 0" fovy="48"/>
   </worldbody>

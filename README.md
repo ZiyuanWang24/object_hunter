@@ -84,7 +84,7 @@ Enter the requested item in the `Item to find` field and press `Start tracking`.
 
 ### MuJoCo virtual-camera simulation
 
-For a repeatable 3-D scene without a physical camera, the project includes a MuJoCo world with a desk, cup, bottle, book, keys, and a fixed RGB camera. The cup disappears for a planned occlusion interval and then reappears at a new time step. MuJoCo produces the RGB video; the simulation runner uses timestamped simulator ground truth as a controlled detector input so tracker and memory behavior can be evaluated independently of YOLO model bias.
+For a repeatable 3-D scene without a physical camera, the project includes a MuJoCo world with a lit desk, procedural mug, capped bottle with label, layered book, key set, and a fixed RGB camera. The cup disappears for a planned occlusion interval and then reappears at a new time step. MuJoCo produces the RGB video; the simulation runner uses timestamped simulator ground truth as a controlled detector input so tracker and memory behavior can be evaluated independently of YOLO model bias.
 
 Use the project `.venv` through the launcher:
 
