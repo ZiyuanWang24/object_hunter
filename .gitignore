@@ -18,3 +18,7 @@ assets/*.mov
 outputs/
 calibration/*.json
 *.log
+# Local SSH credentials and host cache used only for repository publishing.
+/object_hunter
+/object_hunter.pub
+/.ssh_known_hosts
