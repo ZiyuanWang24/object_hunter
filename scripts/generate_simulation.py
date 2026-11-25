@@ -20,6 +20,8 @@ SCENE_XML = r'''
     <headlight ambient="0.45 0.45 0.45" diffuse="0.35 0.35 0.35" specular="0.18 0.18 0.18"/>
   </visual>
   <asset>
+    <texture name="food_tex" type="2d" file="assets/meshes/Textures/food_colormap.png"/>
+    <texture name="platformer_tex" type="2d" file="assets/meshes/Textures/platformer_colormap.png"/>
     <material name="floor_mat" rgba="0.055 0.07 0.09 1" reflectance="0.12"/>
     <material name="wood_mat" rgba="0.38 0.20 0.08 1" reflectance="0.08" shininess="0.22"/>
     <material name="edge_mat" rgba="0.16 0.07 0.025 1" reflectance="0.06"/>
@@ -36,6 +38,14 @@ SCENE_XML = r'''
     <material name="key_dark" rgba="0.25 0.27 0.31 1" reflectance="0.35" shininess="0.55"/>
     <material name="paper_mat" rgba="0.88 0.84 0.70 1" reflectance="0.02"/>
     <material name="bookmark_mat" rgba="0.86 0.10 0.08 1" reflectance="0.04"/>
+    <material name="mug_mesh_mat" rgba="0.08 0.36 0.95 1" reflectance="0.20" shininess="0.65" specular="0.55"/>
+    <material name="bottle_mesh_mat" rgba="0.08 0.75 0.26 1" reflectance="0.15" shininess="0.55" specular="0.40"/>
+    <material name="book_mesh_mat" texture="food_tex" texrepeat="1 1" texuniform="true" rgba="1 1 1 1" reflectance="0.08"/>
+    <material name="key_mesh_mat" rgba="0.72 0.74 0.78 1" reflectance="0.65" shininess="0.80" specular="0.85"/>
+    <mesh name="mug_mesh" file="assets/meshes/mug.obj"/>
+    <mesh name="bottle_mesh" file="assets/meshes/bottle.obj"/>
+    <mesh name="book_mesh" file="assets/meshes/book.obj"/>
+    <mesh name="key_mesh" file="assets/meshes/key.obj"/>
   </asset>
   <worldbody>
     <light pos="-1.5 -1.8 3.0" dir="0.3 0.35 -1" diffuse="0.75 0.78 0.85" specular="0.25 0.25 0.25"/>
@@ -50,37 +60,17 @@ SCENE_XML = r'''
       <geom name="desk_leg_back_left" type="box" pos="-0.62 0.40 -0.38" size="0.055 0.055 0.34" material="edge_mat"/>
       <geom name="desk_leg_back_right" type="box" pos="0.62 0.40 -0.38" size="0.055 0.055 0.34" material="edge_mat"/>
     </body>
-    <body name="cup" mocap="true" pos="-0.30 -0.15 0.87">
-      <geom name="cup_body" type="cylinder" size="0.065 0.09" material="ceramic_mat" contype="0" conaffinity="0"/>
-      <geom name="cup_base" type="cylinder" pos="0 0 -0.087" size="0.057 0.006" material="ceramic_dark" contype="0" conaffinity="0"/>
-      <geom name="cup_rim" type="cylinder" pos="0 0 0.09" size="0.068 0.008" material="ceramic_mat" contype="0" conaffinity="0"/>
-      <geom name="cup_coffee" type="cylinder" pos="0 0 0.088" size="0.052 0.003" material="coffee_mat" contype="0" conaffinity="0"/>
-      <geom name="cup_handle_side" type="capsule" pos="0.098 0 0.018" size="0.010 0.040" material="ceramic_mat" contype="0" conaffinity="0"/>
-      <geom name="cup_handle_top" type="capsule" pos="0.078 0 0.058" quat="0.707 0 0.707 0" size="0.010 0.025" material="ceramic_mat" contype="0" conaffinity="0"/>
-      <geom name="cup_handle_bottom" type="capsule" pos="0.078 0 -0.022" quat="0.707 0 0.707 0" size="0.010 0.025" material="ceramic_mat" contype="0" conaffinity="0"/>
+    <body name="cup" mocap="true" pos="-0.30 -0.15 0.755">
+      <geom name="cup_mesh_geom" type="mesh" mesh="mug_mesh" material="mug_mesh_mat" contype="0" conaffinity="0"/>
     </body>
-    <body name="bottle" mocap="true" pos="0.28 -0.05 0.87">
-      <geom name="bottle_body" type="cylinder" size="0.055 0.14" material="bottle_mat" contype="0" conaffinity="0"/>
-      <geom name="bottle_shoulder" type="ellipsoid" pos="0 0 0.115" size="0.055 0.055 0.045" material="bottle_mat" contype="0" conaffinity="0"/>
-      <geom name="bottle_neck" type="cylinder" pos="0 0 0.19" size="0.028 0.045" material="bottle_mat" contype="0" conaffinity="0"/>
-      <geom name="bottle_cap" type="cylinder" pos="0 0 0.245" size="0.032 0.016" material="bottle_dark" contype="0" conaffinity="0"/>
-      <geom name="bottle_label" type="box" pos="0 -0.056 0.02" size="0.040 0.003 0.045" material="label_mat" contype="0" conaffinity="0"/>
+    <body name="bottle" mocap="true" pos="0.28 -0.05 0.755">
+      <geom name="bottle_mesh_geom" type="mesh" mesh="bottle_mesh" material="bottle_mesh_mat" contype="0" conaffinity="0"/>
     </body>
-    <body name="book" mocap="true" pos="0.30 0.27 0.795">
-      <geom name="book_cover" type="box" size="0.16 0.105 0.018" material="book_mat" contype="0" conaffinity="0"/>
-      <geom name="book_spine" type="box" pos="-0.145 0 0.023" size="0.015 0.098 0.009" material="book_edge" contype="0" conaffinity="0"/>
-      <geom name="book_page_block" type="box" pos="0.006 0 0.023" size="0.137 0.088 0.007" material="paper_mat" contype="0" conaffinity="0"/>
-      <geom name="book_page_top" type="box" pos="0.006 0 0.034" size="0.132 0.083 0.002" material="paper_mat" contype="0" conaffinity="0"/>
-      <geom name="book_bookmark" type="box" pos="0.08 0 0.040" size="0.028 0.006 0.002" material="bookmark_mat" contype="0" conaffinity="0"/>
+    <body name="book" mocap="true" pos="0.30 0.27 0.755">
+      <geom name="book_mesh_geom" type="mesh" mesh="book_mesh" material="book_mesh_mat" contype="0" conaffinity="0"/>
     </body>
-    <body name="keys" mocap="true" pos="-0.28 0.27 0.80">
-      <geom name="key_ring" type="cylinder" pos="-0.068 0 0.018" size="0.026 0.006" material="key_mat" contype="0" conaffinity="0"/>
-      <geom name="key_ring_inner" type="cylinder" pos="-0.068 0 0.025" size="0.014 0.003" material="key_dark" contype="0" conaffinity="0"/>
-      <geom name="key_a_head" type="sphere" pos="-0.018 0.006 0.018" size="0.020" material="key_mat" contype="0" conaffinity="0"/>
-      <geom name="key_a_stem" type="box" pos="0.038 0.006 0.018" size="0.060 0.008 0.006" material="key_mat" contype="0" conaffinity="0"/>
-      <geom name="key_a_tooth" type="box" pos="0.082 0.006 0.026" size="0.010 0.012 0.004" material="key_mat" contype="0" conaffinity="0"/>
-      <geom name="key_b_head" type="sphere" pos="-0.015 -0.025 0.020" size="0.017" material="key_mat" contype="0" conaffinity="0"/>
-      <geom name="key_b_stem" type="box" pos="0.038 -0.025 0.020" size="0.055 0.007 0.006" material="key_mat" contype="0" conaffinity="0"/>
+    <body name="keys" mocap="true" pos="-0.28 0.27 0.755">
+      <geom name="key_mesh_geom" type="mesh" mesh="key_mesh" material="key_mesh_mat" contype="0" conaffinity="0"/>
     </body>
     <camera name="rgb_camera" pos="0 -0.05 2.65" quat="1 0 0 0" fovy="48"/>
   </worldbody>
@@ -97,13 +87,13 @@ def state(name: str, frame: int) -> tuple[np.ndarray, bool, float]:
     if name == "cup":
         xy = np.array([-0.30 + 0.13 * np.sin(t * 0.55), -0.15 + 0.07 * np.cos(t * 0.45)])
         visible = not (6.0 <= t < 8.7)
-        z = 0.87 if visible else 0.70
+        z = 0.755 if visible else 0.70
     elif name == "bottle":
-        xy, visible, z = np.array([0.28, -0.05]), True, 0.87
+        xy, visible, z = np.array([0.28, -0.05]), True, 0.755
     elif name == "book":
-        xy, visible, z = np.array([0.30, 0.27]), True, 0.795
+        xy, visible, z = np.array([0.30, 0.27]), True, 0.755
     else:
-        xy, visible, z = np.array([-0.28, 0.27]), True, 0.80
+        xy, visible, z = np.array([-0.28, 0.27]), True, 0.755
     return xy, visible, z
 
 
