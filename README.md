@@ -107,6 +107,22 @@ powershell -ExecutionPolicy Bypass -File scripts/run_mujoco.ps1 -Mode viewer
 
 This viewer is the high-quality scene-inspection mode. The `ui` mode is the ObjectHunter experiment mode: it adds the RGB camera, target location, tracker lifecycle, occlusion/re-identification controls, and the 3-D scene panel.
 
+For the larger living-room environment, launch the native movable-camera room viewer:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File scripts/run_mujoco.ps1 -Mode room
+```
+
+The room contains a sofa, coffee table, TV console, rug, bookshelf, lamp, plant, wall art, and the tracked mug, bottle, book, and keys. Use the native MuJoCo mouse controls to orbit, pan, and zoom around the room.
+
+To combine the movable room camera with the ObjectHunter tracker dashboard:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File scripts/run_mujoco.ps1 -Mode room-ui
+```
+
+Enter `mug`, `bottle`, `book`, or `keys`. The room UI shows the target's location in room coordinates, lifecycle state, occlusion/re-identification behavior, and camera orbit/zoom/pan controls. As with the tabletop lab, the room UI uses controlled simulator observations to validate the tracking and memory algorithms; it does not claim YOLO/DINO accuracy on synthetic room renders.
+
 Enter `cup`, `bottle`, `book`, or `keys`; the default `cup` target starts automatically. Press `Start` to restart after changing the target. The window contains a live RGB camera view, a perspective 3-D MuJoCo scene with desk thickness and object height, the target's metric tabletop location, lifecycle state, trajectory, velocity, and covariance ellipse. Use `Move left`, `Move right`, `Occlude`, and `Reveal` to exercise motion, prediction, and re-identification. Use `Orbit 3-D` and `Zoom` to inspect the scene from different viewpoints. `Reset` starts a fresh session and `Stop` pauses processing.
 
 The interactive lab uses MuJoCo's rendered scene and simulator geometry as the detection source so the spatial-memory and UI behavior can be tested deterministically without a webcam. The 3-D panel is a real perspective render of the simulated world; the reported target coordinate is still the tabletop `(x, y)` state used by the tracker, not monocular depth reconstructed from the RGB image. The prerecorded replay command above additionally exercises ObjectHunter's video-input path. Neural YOLO/DINO inference remains available through `scripts/run_demo.py` for real camera or video validation.
